@@ -1,14 +1,14 @@
 from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class MsgType(Enum, str):
-    TG = 1
-    EMAIL = 2
-    SMS = 3
+    TG = 'tg'
+    EMAIL = 'email'
+    SMS = 'sms'
 
 
 class SendingMessage(BaseModel):
     msg_type: MsgType
-    msg_text: str
+    msg_text: str = Field(min_length=10, max_length=400)

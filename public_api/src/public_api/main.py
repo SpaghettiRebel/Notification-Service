@@ -9,7 +9,7 @@ app = FastAPI(
     version='0.1'
 )
 
-app.include_router(router)
+app.include_router(router, prefix='/message')
 
 
 @app.get('/health')

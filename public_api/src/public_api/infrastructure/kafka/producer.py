@@ -15,3 +15,6 @@ class KafkaEventPublisher:
             print(f'ERROR: Message failed delivery: {err}')
         else:
             print(f'Produced event to topic {topic}: key = {key:12} value = {value:12}')
+
+    async def publish(self, topic, msg):
+        ...
