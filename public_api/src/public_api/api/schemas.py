@@ -3,7 +3,7 @@ from enum import Enum
 from pydantic import BaseModel, Field
 
 
-class MsgType(Enum, str):
+class MsgType(str, Enum):
     TG = 'tg'
     EMAIL = 'email'
     SMS = 'sms'

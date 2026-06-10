@@ -15,8 +15,11 @@ class NotificationPublisher:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="You cannot send an Email with birthday message")
 
+        # TODO: добавить логику формирования payload сообщения
+
         topic = get_topic_name(msg_type=msg.msg_type)
         await self.kafka_publisher.publish(topic=topic, msg=msg.msg_text)
+        # TODO: испарвить вызов publish
 
     async def publish_christmas_message(self, msg: SendingMessage):
         """Sends Christmas message through TG and Email only"""
@@ -24,5 +27,8 @@ class NotificationPublisher:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="You cannot send an SMS with Christmas message")
 
+        # TODO: добавить логику формирования payload сообщения
+
         topic = get_topic_name(msg_type=msg.msg_type)
         await self.kafka_publisher.publish(topic=topic, msg=msg.msg_text)
+        # TODO: испарвить вызов publish
