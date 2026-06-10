@@ -1,0 +1,56 @@
+services:
+  notification_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: notification_db
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - notification_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d notification_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: kafka
+
+  notification_service:
+    build:
+      context: .
+      dockerfile: notification_service/Dockerfile
+    volumes:
+      - ./notification_service:/app/notification_service
+    env_file:
+      - ./notification_service/.env
+    depends_on:
+      notification_db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    command: >
+      sh -c "python -m alembic upgrade head &&
+             python -m notification_service.worker"
+
+  public_api:
+    build:
+      context: .
+      dockerfile: public_api/Dockerfile
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./public_api:/app/public_api
+    env_file:
+      - ./public_api/.env
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: >
+      sh -c "uvicorn public_api.main:app --host 0.0.0.0 --port 8001 --reload"
+
+volumes:
+  notification_postgres_data:
