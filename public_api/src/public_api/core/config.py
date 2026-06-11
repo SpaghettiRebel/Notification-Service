@@ -7,7 +7,6 @@ class Settings(BaseSettings):
     app_port: int = 8001
 
     kafka_bootstrap_servers: str = "kafka:9092"
-    kafka_notification_events_topic: str = "notification.events"
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -31,7 +31,7 @@ class NotificationPublisher:
             'event_type': 'birthday',
             'channel': msg.msg_type.value,
             'msg_text': msg.msg_text,
-            'created_at': datetime.now(timezone(timedelta(hours=3))).isoformat(),
+            'created_at': datetime.now(timezone.utc).isoformat(),
         }
 
         logger.info(
@@ -58,7 +58,7 @@ class NotificationPublisher:
         """Sends Christmas message through TG and Email only"""
         if msg.msg_type == MsgType.SMS:
             logger.warning(
-                "birthday_email_rejected",
+                "christmas_sms_rejected",
                 extra={"channel": msg.msg_type.value},
             )
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
@@ -69,7 +69,7 @@ class NotificationPublisher:
             'event_type': 'christmas',
             'channel': msg.msg_type.value,
             'msg_text': msg.msg_text,
-            'created_at': datetime.now(timezone(timedelta(hours=3))).isoformat(),
+            'created_at': datetime.now(timezone.utc).isoformat(),
         }
 
         logger.info(
