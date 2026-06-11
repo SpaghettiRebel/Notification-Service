@@ -2,8 +2,8 @@ import json
 
 from confluent_kafka import Producer
 
-from public_api.src.public_api.core.config import settings
-from public_api.src.public_api.core.logger import get_logger
+from public_api.core.config import settings
+from public_api.core.logger import get_logger
 
 
 logger = get_logger(__name__)

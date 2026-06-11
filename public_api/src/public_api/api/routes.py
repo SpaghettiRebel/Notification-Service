@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Body, Depends, status
 
-from public_api.src.public_api.api.schemas import SendingMessage
-from public_api.src.public_api.use_cases.publish_notification import NotificationPublisher
-from public_api.src.public_api.infrastructure.dependencies import get_notification_publisher
-from public_api.src.public_api.core.logger import get_logger
+from public_api.api.schemas import SendingMessage
+from public_api.use_cases.publish_notification import NotificationPublisher
+from public_api.infrastructure.dependencies import get_notification_publisher
+from public_api.core.logger import get_logger
 
 
 logger = get_logger(__name__)

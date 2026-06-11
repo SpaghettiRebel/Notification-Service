@@ -1,12 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from uuid_utils import uuid7
 from fastapi import HTTPException, status
 
-from public_api.src.public_api.infrastructure.kafka.producer import KafkaEventPublisher
-from public_api.src.public_api.infrastructure.kafka.topics import get_topic_name
-from public_api.src.public_api.api.schemas import SendingMessage, MsgType
-from public_api.src.public_api.core.logger import get_logger
+from public_api.infrastructure.kafka.producer import KafkaEventPublisher
+from public_api.infrastructure.kafka.topics import get_topic_name
+from public_api.api.schemas import SendingMessage, MsgType
+from public_api.core.logger import get_logger
 
 
 logger = get_logger(__name__)
@@ -31,7 +31,7 @@ class NotificationPublisher:
             'event_type': 'birthday',
             'channel': msg.msg_type.value,
             'msg_text': msg.msg_text,
-            'created_at': datetime.now(),
+            'created_at': datetime.now(timezone(timedelta(hours=3))).isoformat(),
         }
 
         logger.info(
@@ -43,7 +43,7 @@ class NotificationPublisher:
             },
         )
 
-        topic = get_topic_name(msg_type=msg.msg_type)
+        topic = get_topic_name(msg_type=msg.msg_type.value)
         await self._kafka_publisher.publish(topic=topic, key=event['event_id'], event=event)
 
         logger.info(
@@ -69,7 +69,7 @@ class NotificationPublisher:
             'event_type': 'christmas',
             'channel': msg.msg_type.value,
             'msg_text': msg.msg_text,
-            'created_at': datetime.now(),
+            'created_at': datetime.now(timezone(timedelta(hours=3))).isoformat(),
         }
 
         logger.info(
@@ -81,7 +81,7 @@ class NotificationPublisher:
             },
         )
 
-        topic = get_topic_name(msg_type=msg.msg_type)
+        topic = get_topic_name(msg_type=msg.msg_type.value)
         await self._kafka_publisher.publish(topic=topic, key=event['event_id'], event=event)
 
         logger.info(
