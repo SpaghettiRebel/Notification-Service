@@ -6,8 +6,7 @@ from public_api.use_cases.publish_notification import NotificationPublisher
 from public_api.infrastructure.kafka.producer import KafkaEventPublisher
 
 
-@lru_cache
-async def get_kafka_publisher() -> KafkaEventPublisher:
+def get_kafka_publisher() -> KafkaEventPublisher:
     return KafkaEventPublisher()
 
 
