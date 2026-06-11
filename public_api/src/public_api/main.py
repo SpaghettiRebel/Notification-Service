@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 
-from api.routes import router
+from public_api.src.public_api.api.routes import router
+from public_api.src.public_api.core.logger import setup_logging
 
+
+setup_logging()
 
 app = FastAPI(
     title='Public API',
