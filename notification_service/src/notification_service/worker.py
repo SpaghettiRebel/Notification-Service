@@ -11,8 +11,8 @@ def run():
     use_case = ProcessNotification()
 
     try:
-        for msg in consumer.listen():
-            use_case.process(msg)
+        for msg_data in consumer.listen():
+            use_case.process(msg_data)
             consumer.commit()
 
     except KeyboardInterrupt:
