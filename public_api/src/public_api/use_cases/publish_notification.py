@@ -1,4 +1,4 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 from uuid_utils import uuid7
 from fastapi import HTTPException, status
@@ -20,11 +20,11 @@ class NotificationPublisher:
         """Sends Birthday message through TG and SMS only"""
         if msg.msg_type == MsgType.EMAIL:
             logger.warning(
-                "birthday_email_rejected",
-                extra={"channel": msg.msg_type.value},
+                'birthday_email_rejected',
+                extra={'channel': msg.msg_type.value},
             )
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="You cannot send an Email with birthday message")
+                                detail='You cannot send an Email with birthday message')
 
         event = {
             'event_id': str(uuid7()),
@@ -35,11 +35,11 @@ class NotificationPublisher:
         }
 
         logger.info(
-            "notification_event_created",
+            'notification_event_created',
             extra={
-                "event_id": event["event_id"],
-                "event_type": event["event_type"],
-                "channel": event["channel"],
+                'event_id': event['event_id'],
+                'event_type': event['event_type'],
+                'channel': event['channel'],
             },
         )
 
@@ -47,10 +47,10 @@ class NotificationPublisher:
         await self._kafka_publisher.publish(topic=topic, key=event['event_id'], event=event)
 
         logger.info(
-            "notification_event_published",
+            'notification_event_published',
             extra={
-                "event_id": event["event_id"],
-                "topic": topic,
+                'event_id': event['event_id'],
+                'topic': topic,
             },
         )
 
@@ -58,11 +58,11 @@ class NotificationPublisher:
         """Sends Christmas message through TG and Email only"""
         if msg.msg_type == MsgType.SMS:
             logger.warning(
-                "christmas_sms_rejected",
-                extra={"channel": msg.msg_type.value},
+                'christmas_sms_rejected',
+                extra={'channel': msg.msg_type.value},
             )
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="You cannot send an SMS with Christmas message")
+                                detail='You cannot send an SMS with Christmas message')
 
         event = {
             'event_id': str(uuid7()),
@@ -73,11 +73,11 @@ class NotificationPublisher:
         }
 
         logger.info(
-            "notification_event_created",
+            'notification_event_created',
             extra={
-                "event_id": event["event_id"],
-                "event_type": event["event_type"],
-                "channel": event["channel"],
+                'event_id': event['event_id'],
+                'event_type': event['event_type'],
+                'channel': event['channel'],
             },
         )
 
@@ -85,9 +85,9 @@ class NotificationPublisher:
         await self._kafka_publisher.publish(topic=topic, key=event['event_id'], event=event)
 
         logger.info(
-            "notification_event_published",
+            'notification_event_published',
             extra={
-                "event_id": event["event_id"],
-                "topic": topic,
+                'event_id': event['event_id'],
+                'topic': topic,
             },
         )
