@@ -28,7 +28,13 @@ class KafkaEventConsumer:
 
                 try:
                     payload = json.loads(msg.value().decode('utf-8'))
-                    yield payload
+                    key = msg.key().decode('utf-8') if msg.key() else payload.get('event_id')
+
+                    yield {
+                        'topic': msg.topic(),
+                        'key': key,
+                        'payload': payload
+                    }
                 except json.JSONDecodeError:
                     logger.error("Failed to decode message")
                     continue

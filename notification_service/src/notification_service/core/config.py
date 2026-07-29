@@ -32,6 +32,13 @@ class Settings(BaseSettings):
         }
 
     @property
+    def producer_config(self) -> dict:
+        return {
+            "bootstrap.servers": self.kafka_bootstrap_servers,
+            "acks": "all",
+        }
+
+    @property
     def DATABASE_URL_ASYNCPG(self):
         user = quote_plus(self.DB_USER)
         password = quote_plus(self.DB_PASS)

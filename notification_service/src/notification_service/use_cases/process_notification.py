@@ -15,13 +15,13 @@ class ProcessNotification:
 
     @staticmethod
     @retry(wait=wait_exponential(multiplier=1, min=4, max=10))
-    async def send_on_topic(topic: str, msg_data: dict) -> None:
+    async def send_on_topic(topic: str, payload: dict) -> None:
         if topic == 'notification.tg':
-            await asender.tg_send(msg_data)
+            await asender.tg_send(payload)
         elif topic == 'notification.email':
-            await asender.email_send(msg_data)
+            await asender.email_send(payload)
         elif topic == 'notification.sms':
-            await asender.sms_send(msg_data)
+            await asender.sms_send(payload)
         else:
             logger.warning(f"Invalid topic: {topic}")
 
@@ -29,6 +29,8 @@ class ProcessNotification:
         """Вся асинхронная работа с БД и DLQ"""
         msg_topic = msg_data.get('topic')
         event_id = msg_data.get('key')
+        payload = msg_data.get('payload', {})
+
         msg_topic = str(msg_topic)
         event_id = str(event_id)
 
@@ -41,7 +43,7 @@ class ProcessNotification:
                 return
 
             try:
-                await self.send_on_topic(msg_topic, msg_data)
+                await self.send_on_topic(msg_topic, payload)
             except Exception as e:
                 logger.error(f"Failed to send message for event {event_id}: {e}")
 
@@ -49,7 +51,7 @@ class ProcessNotification:
                 await self.dlq_publisher.publish_dlq(
                     topic=dlq_topic,
                     key=event_id,
-                    event=msg_data
+                    event=payload
                 )
 
                 await repo.update_status(event_id, NotificationStatus.FAILED)

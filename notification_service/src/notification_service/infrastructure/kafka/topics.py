@@ -1,5 +1,4 @@
-topics_names = ['sms', 'tg', 'sms']
-
+topics_names = ['sms', 'tg', 'email']
 group_prefix = 'notification'
 
 
