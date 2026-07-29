@@ -1,6 +1,6 @@
 import enum
-
 from datetime import datetime, timezone
+
 from sqlalchemy import Column, String, DateTime, Enum
 
 from notification_service.infrastructure.db.session import Base

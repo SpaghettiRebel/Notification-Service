@@ -2,9 +2,9 @@ import asyncio
 from tenacity import retry, wait_exponential
 
 from notification_service.core.logger import get_logger
-from notification_service.infrastructure.db import async_session_factory, NotificationRepository
+from notification_service.infrastructure.db import async_session_factory, NotificationRepository, NotificationStatus
 from notification_service.infrastructure.kafka.producer import KafkaEventPublisher
-from notification_service.senders import email_send, sms_send, tg_send
+from notification_service.senders.async_sender import asender
 
 logger = get_logger(__name__)
 
@@ -15,20 +15,22 @@ class ProcessNotification:
 
     @staticmethod
     @retry(wait=wait_exponential(multiplier=1, min=4, max=10))
-    def send_on_topic(topic: str, msg_data: dict) -> None:
+    async def send_on_topic(topic: str, msg_data: dict) -> None:
         if topic == 'notification.tg':
-            tg_send(msg_data)
+            await asender.tg_send(msg_data)
         elif topic == 'notification.email':
-            email_send(msg_data)
+            await asender.email_send(msg_data)
         elif topic == 'notification.sms':
-            sms_send(msg_data)
+            await asender.sms_send(msg_data)
         else:
             logger.warning(f"Invalid topic: {topic}")
 
     async def _async_process(self, msg_data: dict) -> None:
-        """Вся асинхронная работа с БД и DLQ происходит здесь"""
+        """Вся асинхронная работа с БД и DLQ"""
         msg_topic = msg_data.get('topic')
         event_id = msg_data.get('key')
+        msg_topic = str(msg_topic)
+        event_id = str(event_id)
 
         async with async_session_factory() as session:
             repo = NotificationRepository(session)
@@ -39,7 +41,7 @@ class ProcessNotification:
                 return
 
             try:
-                self.send_on_topic(msg_topic, msg_data)
+                await self.send_on_topic(msg_topic, msg_data)
             except Exception as e:
                 logger.error(f"Failed to send message for event {event_id}: {e}")
 
@@ -50,9 +52,9 @@ class ProcessNotification:
                     event=msg_data
                 )
 
-                await repo.update_failed(event_id)
+                await repo.update_status(event_id, NotificationStatus.FAILED)
             else:
-                await repo.update_completed(event_id)
+                await repo.update_status(event_id, NotificationStatus.COMPLETED)
 
     def process(self, msg_data: dict) -> None:
         """Синхронная точка входа для Kafka Consumer"""
