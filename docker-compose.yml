@@ -3,21 +3,21 @@ services:
     image: postgres:15-alpine
     restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: notification_db
+      POSTGRES_USER: ${DB_USER:-user}
+      POSTGRES_PASSWORD: ${DB_PASS:-password}
+      POSTGRES_DB: ${DB_NAME:-notification_db}
     ports:
       - "127.0.0.1:5433:5432"
     volumes:
       - notification_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d notification_db" ]
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 5s
       timeout: 5s
       retries: 5
 
   kafka:
-    image: apache/kafka:latest
+    image: apache/kafka:3.9.1
     restart: always
     ports:
       - "127.0.0.1:9094:9094"
@@ -45,13 +45,26 @@ services:
       retries: 10
 
   notification_service:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: notification_service/Dockerfile
     volumes:
       - ./notification_service:/app/notification_service
-    env_file:
-      - ./notification_service/.env
+    environment:
+      DB_HOST: ${DB_HOST:-notification_db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER:-user}
+      DB_PASS: ${DB_PASS:-password}
+      DB_NAME: ${DB_NAME:-notification_db}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      KAFKA_DELIVERY_TIMEOUT_MS: ${KAFKA_DELIVERY_TIMEOUT_MS:-10000}
+      KAFKA_MAX_POLL_INTERVAL_MS: ${KAFKA_MAX_POLL_INTERVAL_MS:-180000}
+      PROCESSING_LEASE_SECONDS: ${PROCESSING_LEASE_SECONDS:-60}
+      SENDER_MAX_ATTEMPTS: ${SENDER_MAX_ATTEMPTS:-3}
+      SENDER_ATTEMPT_TIMEOUT_SECONDS: ${SENDER_ATTEMPT_TIMEOUT_SECONDS:-10}
+      SENDER_RETRY_MIN_SECONDS: ${SENDER_RETRY_MIN_SECONDS:-1}
+      SENDER_RETRY_MAX_SECONDS: ${SENDER_RETRY_MAX_SECONDS:-5}
     depends_on:
       notification_db:
         condition: service_healthy
@@ -62,6 +75,7 @@ services:
              python -m notification_service.worker"
 
   public_api:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: public_api/Dockerfile
@@ -69,13 +83,23 @@ services:
       - "8001:8001"
     volumes:
       - ./public_api:/app/public_api
-    env_file:
-      - ./public_api/.env
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      KAFKA_DELIVERY_TIMEOUT_MS: ${KAFKA_DELIVERY_TIMEOUT_MS:-10000}
     depends_on:
       kafka:
         condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8001/health', timeout=2)"
+      interval: 10s
+      timeout: 3s
+      retries: 5
     command: >
-      sh -c "uvicorn public_api.main:app --host 0.0.0.0 --port 8001 --reload"
+      sh -c "uvicorn public_api.main:app --host 0.0.0.0 --port 8001"
 
 volumes:
   notification_postgres_data:

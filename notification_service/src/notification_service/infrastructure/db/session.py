@@ -3,7 +3,10 @@ from sqlalchemy.orm import DeclarativeBase
 
 from notification_service.core.config import settings
 
-engine = create_async_engine(settings.DATABASE_URL_ASYNCPG)
+engine = create_async_engine(
+    settings.DATABASE_URL_ASYNCPG,
+    pool_pre_ping=True,
+)
 
 async_session_factory = async_sessionmaker(
     bind=engine,

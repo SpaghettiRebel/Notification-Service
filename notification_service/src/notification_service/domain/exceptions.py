@@ -6,3 +6,7 @@ class SmsServerUnavailableError(Exception):
 
 class SmtpServerUnavailableError(Exception):
     pass
+
+
+class UnsupportedNotificationTopicError(Exception):
+    pass
