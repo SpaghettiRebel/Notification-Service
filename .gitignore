@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Go
+/bin/
+*.exe
+*.test
+*.out
+go.work
+go.work.sum

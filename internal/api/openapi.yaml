@@ -1,0 +1,148 @@
+openapi: 3.1.0
+info:
+  title: Public API
+  description: Public HTTP API for Notification Events making
+  version: "0.1"
+paths:
+  /message/birthday:
+    post:
+      summary: Send birthday greeting
+      description: Allowed channels are tg and sms; email is rejected with 400.
+      operationId: sendBirthdayGreeting
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        $ref: "#/components/requestBodies/SendingMessage"
+      responses:
+        "202":
+          $ref: "#/components/responses/Accepted"
+        "400":
+          $ref: "#/components/responses/ChannelNotAllowed"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /message/christmas:
+    post:
+      summary: Send Christmas greeting
+      description: Allowed channels are tg and email; sms is rejected with 400.
+      operationId: sendChristmasGreeting
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        $ref: "#/components/requestBodies/SendingMessage"
+      responses:
+        "202":
+          $ref: "#/components/responses/Accepted"
+        "400":
+          $ref: "#/components/responses/ChannelNotAllowed"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /health:
+    get:
+      summary: Readiness check
+      description: Checks that Kafka is reachable through the shared producer.
+      operationId: healthCheck
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "503":
+          description: Kafka is unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Detail"
+  /live:
+    get:
+      summary: Liveness check
+      operationId: livenessCheck
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+components:
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Repeating a request with the same key returns the same event_id.
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 128
+  requestBodies:
+    SendingMessage:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SendingMessage"
+  responses:
+    Accepted:
+      description: The event was published to Kafka.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Accepted"
+    ChannelNotAllowed:
+      description: The channel is not allowed for this greeting.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Detail"
+    ValidationError:
+      description: The header or the body failed validation.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationErrors"
+    Ok:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                const: ok
+  schemas:
+    SendingMessage:
+      type: object
+      required: [msg_type, msg_text]
+      properties:
+        msg_type:
+          type: string
+          enum: [tg, email, sms]
+        msg_text:
+          type: string
+          minLength: 10
+          maxLength: 400
+    Accepted:
+      type: object
+      properties:
+        status:
+          type: string
+          const: accepted
+        event_id:
+          type: string
+          format: uuid
+    Detail:
+      type: object
+      properties:
+        detail:
+          type: string
+    ValidationErrors:
+      type: object
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
+            properties:
+              loc:
+                type: array
+                items:
+                  type: string
+              msg:
+                type: string
+              type:
+                type: string
